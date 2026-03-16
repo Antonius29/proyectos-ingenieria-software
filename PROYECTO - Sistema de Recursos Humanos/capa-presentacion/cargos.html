@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Cargos - RRHH</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>Sistema de Recursos Humanos</h1>
+                    <p class="header-subtitle">Gestión Integral de Personal y Nóminas</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegación -->
+    <nav class="nav">
+        <div class="container">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="empleados.html" class="nav-link">Empleados</a>
+                </li>
+                <li class="nav-item">
+                    <a href="departamentos.html" class="nav-link">Departamentos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="cargos.html" class="nav-link active">Cargos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="reportes.html" class="nav-link">Reportes</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Alertas -->
+            <div id="alertContainer"></div>
+
+            <!-- Card principal -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Gestión de Cargos</h2>
+                        <p class="card-subtitle">Administrar cargos, niveles y rangos salariales</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="abrirModalNuevo()">
+                        <span>➕</span> Nuevo Cargo
+                    </button>
+                </div>
+
+                <!-- Filtros -->
+                <div class="search-bar">
+                    <select id="filterNivel" class="form-select" onchange="filtrarPorNivel()" style="width: auto;">
+                        <option value="">Todos los niveles</option>
+                        <option value="DIRECTOR">Director</option>
+                        <option value="GERENTE">Gerente</option>
+                        <option value="SENIOR">Senior</option>
+                        <option value="SEMI-SENIOR">Semi-Senior</option>
+                        <option value="JUNIOR">Junior</option>
+                    </select>
+                </div>
+
+                <!-- Tabla de cargos -->
+                <div class="table-container">
+                    <table class="table" id="tableCargos">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre del Cargo</th>
+                                <th>Nivel</th>
+                                <th>Descripción</th>
+                                <th>Rango Salarial</th>
+                                <th>Empleados</th>
+                                <th>Salario Promedio</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Distribución por nivel -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Distribución por Nivel</h2>
+                </div>
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para crear/editar cargo -->
+    <div id="modalCargo" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Nuevo Cargo</h3>
+                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formCargo" onsubmit="guardarCargo(event)">
+                    <input type="hidden" id="cargoId">
+                    
+                    <div class="form-group">
+                        <label for="nombre" class="form-label required">Nombre del Cargo</label>
+                        <input type="text" id="nombre" class="form-input" required placeholder="Ej: Desarrollador Senior">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nivel" class="form-label required">Nivel</label>
+                        <select id="nivel" class="form-select" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="JUNIOR">Junior</option>
+                            <option value="SEMI-SENIOR">Semi-Senior</option>
+                            <option value="SENIOR">Senior</option>
+                            <option value="GERENTE">Gerente</option>
+                            <option value="DIRECTOR">Director</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea id="descripcion" class="form-textarea" placeholder="Descripción del cargo y responsabilidades..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="salarioMinimo" class="form-label required">Salario Mínimo</label>
+                            <input type="number" id="salarioMinimo" class="form-input" step="0.01" min="0" required placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label for="salarioMaximo" class="form-label required">Salario Máximo</label>
+                            <input type="number" id="salarioMaximo" class="form-input" step="0.01" min="0" required placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Nota:</strong> El rango salarial debe ser de al menos $500 de diferencia.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" form="formCargo" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 Sistema de Recursos Humanos. Arquitectura en 3 capas.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module">
+        import * as CargosService from '../capa-negocio/cargos-service.js';
+
+        // Variables globales
+        let todosCargos = [];
+        let resumenCargos = [];
+
+        // Exponer funciones al ámbito global
+        window.abrirModalNuevo = abrirModalNuevo;
+        window.cerrarModal = cerrarModal;
+        window.guardarCargo = guardarCargo;
+        window.editarCargo = editarCargo;
+        window.eliminarCargo = eliminarCargo;
+        window.filtrarPorNivel = filtrarPorNivel;
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDatos();
+        });
+
+        async function cargarDatos() {
+            try {
+                // Cargar cargos
+                todosCargos = CargosService.obtenerCargosOrdenados();
+                resumenCargos = CargosService.obtenerResumenCargos();
+                renderizarTabla(todosCargos);
+                renderizarEstadisticas(resumenCargos);
+            } catch (error) {
+                console.error('[v0] Error al cargar datos:', error);
+                mostrarAlerta('Error al cargar los datos', 'danger');
+            }
+        }
+
+        function renderizarTabla(cargos) {
+            const tbody = document.querySelector('#tableCargos tbody');
+            if (cargos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay cargos registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = cargos.map(cargo => {
+                const stats = resumenCargos.find(r => r.ID_CARGO === cargo.ID_CARGO) || {};
+                return `
+                    <tr>
+                        <td>${cargo.ID_CARGO}</td>
+                        <td><strong>${cargo.NOMBRE}</strong></td>
+                        <td><span class="badge ${obtenerClaseNivel(cargo.NIVEL)}">${cargo.NIVEL}</span></td>
+                        <td>${cargo.DESCRIPCION || '-'}</td>
+                        <td>
+                            ${formatearMoneda(cargo.SALARIO_MINIMO)} - ${formatearMoneda(cargo.SALARIO_MAXIMO)}
+                        </td>
+                        <td>${stats.TOTAL_EMPLEADOS || 0}</td>
+                        <td>${stats.SALARIO_PROMEDIO_REAL_FORMATO || '$0.00'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="editarCargo(${cargo.ID_CARGO})">Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarCargo(${cargo.ID_CARGO})">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderizarEstadisticas(resumen) {
+            const statsGrid = document.getElementById('statsGrid');
+            
+            // Agrupar por nivel
+            const niveles = {};
+            resumen.forEach(cargo => {
+                if (!niveles[cargo.NIVEL]) {
+                    niveles[cargo.NIVEL] = {
+                        empleados: 0,
+                        cargos: 0
+                    };
+                }
+                niveles[cargo.NIVEL].empleados += cargo.TOTAL_EMPLEADOS || 0;
+                niveles[cargo.NIVEL].cargos++;
+            });
+
+            const ordenNiveles = ['DIRECTOR', 'GERENTE', 'SENIOR', 'SEMI-SENIOR', 'JUNIOR'];
+            
+            statsGrid.innerHTML = ordenNiveles
+                .filter(nivel => niveles[nivel])
+                .map(nivel => `
+                    <div class="stat-card ${obtenerColorNivel(nivel)}">
+                        <div class="stat-label">${nivel}</div>
+                        <div class="stat-value">${niveles[nivel].empleados}</div>
+                        <div class="stat-change">
+                            Empleados en ${niveles[nivel].cargos} cargo${niveles[nivel].cargos !== 1 ? 's' : ''}
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        function abrirModalNuevo() {
+            document.getElementById('modalTitle').textContent = 'Nuevo Cargo';
+            document.getElementById('formCargo').reset();
+            document.getElementById('cargoId').value = '';
+            document.getElementById('modalCargo').classList.add('active');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalCargo').classList.remove('active');
+        }
+
+        function editarCargo(id) {
+            const cargo = todosCargos.find(c => c.ID_CARGO === id);
+            if (!cargo) return;
+
+            document.getElementById('modalTitle').textContent = 'Editar Cargo';
+            document.getElementById('cargoId').value = cargo.ID_CARGO;
+            document.getElementById('nombre').value = cargo.NOMBRE;
+            document.getElementById('nivel').value = cargo.NIVEL;
+            document.getElementById('descripcion').value = cargo.DESCRIPCION || '';
+            document.getElementById('salarioMinimo').value = cargo.SALARIO_MINIMO;
+            document.getElementById('salarioMaximo').value = cargo.SALARIO_MAXIMO;
+            
+            document.getElementById('modalCargo').classList.add('active');
+        }
+
+        function guardarCargo(event) {
+            event.preventDefault();
+
+            const datos = {
+                NOMBRE: document.getElementById('nombre').value,
+                NIVEL: document.getElementById('nivel').value,
+                DESCRIPCION: document.getElementById('descripcion').value,
+                SALARIO_MINIMO: parseFloat(document.getElementById('salarioMinimo').value),
+                SALARIO_MAXIMO: parseFloat(document.getElementById('salarioMaximo').value)
+            };
+
+            const id = document.getElementById('cargoId').value;
+            let resultado;
+
+            if (id) {
+                // Actualizar
+                resultado = CargosService.actualizarCargo(parseInt(id), datos);
+            } else {
+                // Crear
+                resultado = CargosService.crearCargo(datos);
+            }
+
+            if (resultado.success) {
+                mostrarAlerta(resultado.message, 'success');
+                cerrarModal();
+                cargarDatos();
+            } else {
+                mostrarAlerta(resultado.message, 'danger');
+            }
+        }
+
+        function eliminarCargo(id) {
+            if (!confirm('¿Está seguro de que desea eliminar este cargo?\nEsta acción no se puede deshacer.')) {
+                return;
+            }
+
+            const resultado = CargosService.eliminarCargo(id);
+            
+            if (resultado.success) {
+                mostrarAlerta(resultado.message, 'success');
+                cargarDatos();
+            } else {
+                mostrarAlerta(resultado.message, 'danger');
+            }
+        }
+
+        function filtrarPorNivel() {
+            const nivel = document.getElementById('filterNivel').value;
+            if (!nivel) {
+                renderizarTabla(todosCargos);
+                return;
+            }
+            const cargosFiltrados = todosCargos.filter(c => c.NIVEL === nivel);
+            renderizarTabla(cargosFiltrados);
+        }
+
+        function mostrarAlerta(mensaje, tipo) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        function obtenerClaseNivel(nivel) {
+            const clases = {
+                'DIRECTOR': 'badge-danger',
+                'GERENTE': 'badge-warning',
+                'SENIOR': 'badge-primary',
+                'SEMI-SENIOR': 'badge-info',
+                'JUNIOR': 'badge-success'
+            };
+            return clases[nivel] || 'badge-secondary';
+        }
+
+        function obtenerColorNivel(nivel) {
+            const colores = {
+                'DIRECTOR': 'danger',
+                'GERENTE': 'warning',
+                'SENIOR': '',
+                'SEMI-SENIOR': 'info',
+                'JUNIOR': 'success'
+            };
+            return colores[nivel] || '';
+        }
+
+        function formatearMoneda(valor) {
+            return new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(valor);
+        }
+    </script>
+</body>
+</html>

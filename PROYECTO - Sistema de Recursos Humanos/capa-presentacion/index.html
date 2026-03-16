@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Recursos Humanos - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>Sistema de Recursos Humanos</h1>
+                    <p class="header-subtitle">Gestión Integral de Personal y Nóminas</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegación -->
+    <nav class="nav">
+        <div class="container">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link active">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="empleados.html" class="nav-link">Empleados</a>
+                </li>
+                <li class="nav-item">
+                    <a href="departamentos.html" class="nav-link">Departamentos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="cargos.html" class="nav-link">Cargos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="reportes.html" class="nav-link">Reportes</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Alerta de bienvenida -->
+            <div class="alert alert-info">
+                <strong>Bienvenido al Sistema de Recursos Humanos</strong><br>
+                Aquí podrás gestionar toda la información de empleados, departamentos y cargos.
+            </div>
+
+            <!-- Métricas principales -->
+            <div class="stats-grid" id="statsGrid">
+                <!-- Se llenará dinámicamente con JavaScript -->
+            </div>
+
+            <!-- Gráficos y resúmenes -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Resumen por Departamento</h2>
+                        <p class="card-subtitle">Distribución de empleados y presupuestos</p>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="table" id="tableDepartamentos">
+                        <thead>
+                            <tr>
+                                <th>Departamento</th>
+                                <th>Empleados</th>
+                                <th>Salario Promedio</th>
+                                <th>Nómina Mensual</th>
+                                <th>Presupuesto</th>
+                                <th>% Usado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top empleados por antigüedad -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Empleados con Mayor Antigüedad</h2>
+                        <p class="card-subtitle">Top 10 empleados con más años en la empresa</p>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="table" id="tableAntiguedad">
+                        <thead>
+                            <tr>
+                                <th>Empleado</th>
+                                <th>Departamento</th>
+                                <th>Cargo</th>
+                                <th>Fecha Ingreso</th>
+                                <th>Antigüedad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 Sistema de Recursos Humanos. Desarrollado con arquitectura en 3 capas.</p>
+            <p class="mt-1">Capa de Datos | Capa de Negocio | Capa de Presentación</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="../capa-negocio/reportes-service.js"></script>
+    <script type="module" src="../capa-negocio/departamentos-service.js"></script>
+    <script type="module">
+        import * as ReportesService from '../capa-negocio/reportes-service.js';
+        import * as DepartamentosService from '../capa-negocio/departamentos-service.js';
+
+        // Cargar datos del dashboard al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDashboard();
+        });
+
+        async function cargarDashboard() {
+            try {
+                // Cargar métricas principales
+                const dashboard = ReportesService.generarDashboard();
+                renderizarStats(dashboard);
+
+                // Cargar resumen de departamentos
+                const departamentos = ReportesService.reporteDistribucionDepartamentos();
+                renderizarTablaDepartamentos(departamentos);
+
+                // Cargar empleados con mayor antigüedad
+                const antiguedad = ReportesService.reporteEmpleadosAntiguedad(10);
+                renderizarTablaAntiguedad(antiguedad);
+            } catch (error) {
+                console.error('[v0] Error al cargar dashboard:', error);
+                mostrarError('Error al cargar los datos del dashboard');
+            }
+        }
+
+        function renderizarStats(data) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card success">
+                    <div class="stat-label">Empleados Activos</div>
+                    <div class="stat-value">${data.empleadosActivos}</div>
+                    <div class="stat-change">de ${data.totalEmpleados} totales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Departamentos</div>
+                    <div class="stat-value">${data.totalDepartamentos}</div>
+                    <div class="stat-change">Organizados</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-label">Nómina Mensual</div>
+                    <div class="stat-value">${data.nominaMensualFormato}</div>
+                    <div class="stat-change">${data.nominaAnualFormato} anual</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-label">Salario Promedio</div>
+                    <div class="stat-value">${data.salarioPromedioFormato}</div>
+                    <div class="stat-change">Antigüedad: ${data.antiguedadPromedioFormato}</div>
+                </div>
+            `;
+        }
+
+        function renderizarTablaDepartamentos(departamentos) {
+            const tbody = document.querySelector('#tableDepartamentos tbody');
+            tbody.innerHTML = departamentos.map(dep => `
+                <tr>
+                    <td><strong>${dep.departamento}</strong></td>
+                    <td>${dep.empleados}</td>
+                    <td>${dep.salarioPromedioFormato}</td>
+                    <td>${dep.nominaMensualFormato}</td>
+                    <td>${dep.presupuestoFormato}</td>
+                    <td>
+                        <span class="badge ${dep.porcentajeUsado > 80 ? 'badge-danger' : dep.porcentajeUsado > 60 ? 'badge-warning' : 'badge-success'}">
+                            ${dep.porcentajeUsado}%
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderizarTablaAntiguedad(empleados) {
+            const tbody = document.querySelector('#tableAntiguedad tbody');
+            tbody.innerHTML = empleados.map(emp => `
+                <tr>
+                    <td><strong>${emp.nombre}</strong></td>
+                    <td>${emp.departamento}</td>
+                    <td>${emp.cargo}</td>
+                    <td>${emp.fechaContratacionFormato}</td>
+                    <td>
+                        <span class="badge badge-info">${emp.antiguedadFormato}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function mostrarError(mensaje) {
+            const container = document.querySelector('.container');
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger';
+            alert.textContent = mensaje;
+            container.insertBefore(alert, container.firstChild);
+        }
+    </script>
+</body>
+</html>

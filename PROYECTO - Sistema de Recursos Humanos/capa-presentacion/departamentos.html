@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Departamentos - RRHH</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>Sistema de Recursos Humanos</h1>
+                    <p class="header-subtitle">Gestión Integral de Personal y Nóminas</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegación -->
+    <nav class="nav">
+        <div class="container">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="empleados.html" class="nav-link">Empleados</a>
+                </li>
+                <li class="nav-item">
+                    <a href="departamentos.html" class="nav-link active">Departamentos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="cargos.html" class="nav-link">Cargos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="reportes.html" class="nav-link">Reportes</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Alertas -->
+            <div id="alertContainer"></div>
+
+            <!-- Card principal -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Gestión de Departamentos</h2>
+                        <p class="card-subtitle">Administrar departamentos y sus presupuestos</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="abrirModalNuevo()">
+                        <span>➕</span> Nuevo Departamento
+                    </button>
+                </div>
+
+                <!-- Tabla de departamentos -->
+                <div class="table-container">
+                    <table class="table" id="tableDepartamentos">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Empleados</th>
+                                <th>Presupuesto</th>
+                                <th>Nómina Mensual</th>
+                                <th>Disponible</th>
+                                <th>% Usado</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Resumen de departamentos -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Estadísticas por Departamento</h2>
+                </div>
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para crear/editar departamento -->
+    <div id="modalDepartamento" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Nuevo Departamento</h3>
+                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formDepartamento" onsubmit="guardarDepartamento(event)">
+                    <input type="hidden" id="departamentoId">
+                    
+                    <div class="form-group">
+                        <label for="nombre" class="form-label required">Nombre del Departamento</label>
+                        <input type="text" id="nombre" class="form-input" required placeholder="Ej: Recursos Humanos">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea id="descripcion" class="form-textarea" placeholder="Descripción del departamento..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="presupuesto" class="form-label">Presupuesto Anual</label>
+                            <input type="number" id="presupuesto" class="form-input" step="0.01" min="0" placeholder="0.00">
+                            <small style="color: #64748b;">Presupuesto total asignado al departamento</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="activo" class="form-label">Estado</label>
+                            <select id="activo" class="form-select">
+                                <option value="S">Activo</option>
+                                <option value="N">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" form="formDepartamento" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 Sistema de Recursos Humanos. Arquitectura en 3 capas.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module">
+        import * as DepartamentosService from '../capa-negocio/departamentos-service.js';
+
+        // Variables globales
+        let todosDepartamentos = [];
+
+        // Exponer funciones al ámbito global
+        window.abrirModalNuevo = abrirModalNuevo;
+        window.cerrarModal = cerrarModal;
+        window.guardarDepartamento = guardarDepartamento;
+        window.editarDepartamento = editarDepartamento;
+        window.eliminarDepartamento = eliminarDepartamento;
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDatos();
+        });
+
+        async function cargarDatos() {
+            try {
+                // Cargar departamentos
+                todosDepartamentos = DepartamentosService.obtenerDepartamentos();
+                renderizarTabla(todosDepartamentos);
+
+                // Cargar resumen
+                const resumen = DepartamentosService.obtenerResumenDepartamentos();
+                renderizarResumen(resumen);
+            } catch (error) {
+                console.error('[v0] Error al cargar datos:', error);
+                mostrarAlerta('Error al cargar los datos', 'danger');
+            }
+        }
+
+        function renderizarTabla(departamentos) {
+            const tbody = document.querySelector('#tableDepartamentos tbody');
+            if (departamentos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay departamentos registrados</td></tr>';
+                return;
+            }
+
+            // Obtener resumen para mostrar estadísticas
+            const resumen = DepartamentosService.obtenerResumenDepartamentos();
+
+            tbody.innerHTML = departamentos.map(dep => {
+                const stats = resumen.find(r => r.ID_DEPARTAMENTO === dep.ID_DEPARTAMENTO) || {};
+                return `
+                    <tr>
+                        <td>${dep.ID_DEPARTAMENTO}</td>
+                        <td><strong>${dep.NOMBRE}</strong></td>
+                        <td>${dep.DESCRIPCION || '-'}</td>
+                        <td>${stats.EMPLEADOS_ACTIVOS || 0}</td>
+                        <td>${stats.PRESUPUESTO_FORMATO || '$0.00'}</td>
+                        <td>${stats.NOMINA_MENSUAL_FORMATO || '$0.00'}</td>
+                        <td>${stats.PRESUPUESTO_DISPONIBLE_FORMATO || '$0.00'}</td>
+                        <td>
+                            <span class="badge ${obtenerClasePorcentaje(stats.PORCENTAJE_USADO)}">
+                                ${stats.PORCENTAJE_USADO || '0.0'}%
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge ${dep.ACTIVO === 'S' ? 'badge-success' : 'badge-danger'}">
+                                ${dep.ACTIVO === 'S' ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="editarDepartamento(${dep.ID_DEPARTAMENTO})">Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarDepartamento(${dep.ID_DEPARTAMENTO})">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderizarResumen(resumen) {
+            const statsGrid = document.getElementById('statsGrid');
+            
+            if (resumen.length === 0) {
+                statsGrid.innerHTML = '<p>No hay datos disponibles</p>';
+                return;
+            }
+
+            statsGrid.innerHTML = resumen.slice(0, 4).map(dep => `
+                <div class="stat-card ${obtenerColorCard(dep.PORCENTAJE_USADO)}">
+                    <div class="stat-label">${dep.NOMBRE}</div>
+                    <div class="stat-value">${dep.EMPLEADOS_ACTIVOS}</div>
+                    <div class="stat-change">
+                        Empleados • ${dep.NOMINA_MENSUAL_FORMATO}/mes
+                    </div>
+                    <div class="stat-change">
+                        Presupuesto usado: ${dep.PORCENTAJE_USADO}%
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function abrirModalNuevo() {
+            document.getElementById('modalTitle').textContent = 'Nuevo Departamento';
+            document.getElementById('formDepartamento').reset();
+            document.getElementById('departamentoId').value = '';
+            document.getElementById('modalDepartamento').classList.add('active');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalDepartamento').classList.remove('active');
+        }
+
+        function editarDepartamento(id) {
+            const departamento = todosDepartamentos.find(d => d.ID_DEPARTAMENTO === id);
+            if (!departamento) return;
+
+            document.getElementById('modalTitle').textContent = 'Editar Departamento';
+            document.getElementById('departamentoId').value = departamento.ID_DEPARTAMENTO;
+            document.getElementById('nombre').value = departamento.NOMBRE;
+            document.getElementById('descripcion').value = departamento.DESCRIPCION || '';
+            document.getElementById('presupuesto').value = departamento.PRESUPUESTO || 0;
+            document.getElementById('activo').value = departamento.ACTIVO;
+            
+            document.getElementById('modalDepartamento').classList.add('active');
+        }
+
+        function guardarDepartamento(event) {
+            event.preventDefault();
+
+            const datos = {
+                NOMBRE: document.getElementById('nombre').value,
+                DESCRIPCION: document.getElementById('descripcion').value,
+                PRESUPUESTO: parseFloat(document.getElementById('presupuesto').value) || 0,
+                ACTIVO: document.getElementById('activo').value
+            };
+
+            const id = document.getElementById('departamentoId').value;
+            let resultado;
+
+            if (id) {
+                // Actualizar
+                resultado = DepartamentosService.actualizarDepartamento(parseInt(id), datos);
+            } else {
+                // Crear
+                datos.FECHA_CREACION = new Date();
+                resultado = DepartamentosService.crearDepartamento(datos);
+            }
+
+            if (resultado.success) {
+                mostrarAlerta(resultado.message, 'success');
+                cerrarModal();
+                cargarDatos();
+            } else {
+                mostrarAlerta(resultado.message, 'danger');
+            }
+        }
+
+        function eliminarDepartamento(id) {
+            if (!confirm('¿Está seguro de que desea eliminar este departamento?\nEsta acción no se puede deshacer.')) {
+                return;
+            }
+
+            const resultado = DepartamentosService.eliminarDepartamento(id);
+            
+            if (resultado.success) {
+                mostrarAlerta(resultado.message, 'success');
+                cargarDatos();
+            } else {
+                mostrarAlerta(resultado.message, 'danger');
+            }
+        }
+
+        function mostrarAlerta(mensaje, tipo) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        function obtenerClasePorcentaje(porcentaje) {
+            const valor = parseFloat(porcentaje) || 0;
+            if (valor > 90) return 'badge-danger';
+            if (valor > 75) return 'badge-warning';
+            return 'badge-success';
+        }
+
+        function obtenerColorCard(porcentaje) {
+            const valor = parseFloat(porcentaje) || 0;
+            if (valor > 90) return 'danger';
+            if (valor > 75) return 'warning';
+            return 'success';
+        }
+    </script>
+</body>
+</html>

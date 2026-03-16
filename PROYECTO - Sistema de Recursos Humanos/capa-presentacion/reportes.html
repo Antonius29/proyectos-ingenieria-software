@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - RRHH</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>Sistema de Recursos Humanos</h1>
+                    <p class="header-subtitle">Gestión Integral de Personal y Nóminas</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegación -->
+    <nav class="nav">
+        <div class="container">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="empleados.html" class="nav-link">Empleados</a>
+                </li>
+                <li class="nav-item">
+                    <a href="departamentos.html" class="nav-link">Departamentos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="cargos.html" class="nav-link">Cargos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="reportes.html" class="nav-link active">Reportes</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Distribución por Cargos -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Distribución por Cargos</h2>
+                    <p class="card-subtitle">Empleados agrupados por cargo y nivel</p>
+                </div>
+                <div class="table-container">
+                    <table class="table" id="tableCargos">
+                        <thead>
+                            <tr>
+                                <th>Cargo</th>
+                                <th>Nivel</th>
+                                <th>Empleados</th>
+                                <th>Salario Promedio</th>
+                                <th>Rango Mínimo</th>
+                                <th>Rango Máximo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Historial de Cambios Salariales -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Historial de Cambios Salariales</h2>
+                    <p class="card-subtitle">Últimos ajustes de salarios realizados</p>
+                </div>
+                <div class="table-container">
+                    <table class="table" id="tableHistorial">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Empleado</th>
+                                <th>Departamento</th>
+                                <th>Cargo</th>
+                                <th>Salario Anterior</th>
+                                <th>Salario Nuevo</th>
+                                <th>Cambio</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Distribución por Estado -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Distribución de Empleados por Estado</h2>
+                </div>
+                <div class="stats-grid" id="statsEstados">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 Sistema de Recursos Humanos. Arquitectura en 3 capas.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module">
+        import * as ReportesService from '../capa-negocio/reportes-service.js';
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarReportes();
+        });
+
+        async function cargarReportes() {
+            try {
+                // Reporte de cargos
+                const reporteCargos = ReportesService.reporteDistribucionCargos();
+                renderizarTablaCargos(reporteCargos);
+
+                // Historial de salarios
+                const historial = ReportesService.reporteHistorialSalarios();
+                renderizarTablaHistorial(historial);
+
+                // Distribución por estados
+                const estados = ReportesService.reporteDistribucionEstados();
+                renderizarEstados(estados);
+            } catch (error) {
+                console.error('[v0] Error al cargar reportes:', error);
+            }
+        }
+
+        function renderizarTablaCargos(cargos) {
+            const tbody = document.querySelector('#tableCargos tbody');
+            if (cargos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay datos disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = cargos.map(cargo => `
+                <tr>
+                    <td><strong>${cargo.cargo}</strong></td>
+                    <td><span class="badge ${obtenerClaseNivel(cargo.nivel)}">${cargo.nivel}</span></td>
+                    <td>${cargo.empleados}</td>
+                    <td>${cargo.salarioPromedioRealFormato}</td>
+                    <td>${cargo.rangoMinimoFormato}</td>
+                    <td>${cargo.rangoMaximoFormato}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderizarTablaHistorial(historial) {
+            const tbody = document.querySelector('#tableHistorial tbody');
+            if (historial.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay cambios salariales registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = historial.map(h => `
+                <tr>
+                    <td>${h.fechaFormato}</td>
+                    <td><strong>${h.empleado}</strong></td>
+                    <td>${h.departamento}</td>
+                    <td>${h.cargo}</td>
+                    <td>${h.salarioAnteriorFormato}</td>
+                    <td>${h.salarioNuevoFormato}</td>
+                    <td>
+                        <span class="badge ${h.porcentajeCambio > 0 ? 'badge-success' : 'badge-danger'}">
+                            ${h.porcentajeCambio > 0 ? '+' : ''}${h.porcentajeCambio.toFixed(2)}%
+                        </span>
+                    </td>
+                    <td>${h.motivo}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderizarEstados(estados) {
+            const statsGrid = document.getElementById('statsEstados');
+            
+            if (estados.length === 0) {
+                statsGrid.innerHTML = '<p>No hay datos disponibles</p>';
+                return;
+            }
+
+            const dashboard = ReportesService.generarDashboard();
+
+            statsGrid.innerHTML = estados.map(estado => `
+                <div class="stat-card ${obtenerColorEstado(estado.estado)}">
+                    <div class="stat-label">${estado.estado}</div>
+                    <div class="stat-value">${estado.cantidad}</div>
+                    <div class="stat-change">
+                        ${estado.porcentaje}% del total (${dashboard.totalEmpleados})
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function obtenerClaseNivel(nivel) {
+            const clases = {
+                'DIRECTOR': 'badge-danger',
+                'GERENTE': 'badge-warning',
+                'SENIOR': 'badge-primary',
+                'SEMI-SENIOR': 'badge-info',
+                'JUNIOR': 'badge-success'
+            };
+            return clases[nivel] || 'badge-secondary';
+        }
+
+        function obtenerColorEstado(estado) {
+            const colores = {
+                'ACTIVO': 'success',
+                'INACTIVO': 'danger',
+                'VACACIONES': 'warning',
+                'LICENCIA': 'info'
+            };
+            return colores[estado] || '';
+        }
+    </script>
+</body>
+</html>

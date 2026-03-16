@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Empleados - RRHH</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>Sistema de Recursos Humanos</h1>
+                    <p class="header-subtitle">Gestión Integral de Personal y Nóminas</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegación -->
+    <nav class="nav">
+        <div class="container">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="empleados.html" class="nav-link active">Empleados</a>
+                </li>
+                <li class="nav-item">
+                    <a href="departamentos.html" class="nav-link">Departamentos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="cargos.html" class="nav-link">Cargos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="reportes.html" class="nav-link">Reportes</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Alertas -->
+            <div id="alertContainer"></div>
+
+            <!-- Card principal -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Gestión de Empleados</h2>
+                        <p class="card-subtitle">Crear, modificar y eliminar registros de empleados</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="abrirModalNuevo()">
+                        <span>➕</span> Nuevo Empleado
+                    </button>
+                </div>
+
+                <!-- Barra de búsqueda y filtros -->
+                <div class="search-bar">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="Buscar por nombre, apellido o email..."
+                        oninput="buscarEmpleados()">
+                    <select id="filterDepartamento" class="form-select" onchange="filtrarPorDepartamento()" style="width: auto;">
+                        <option value="">Todos los departamentos</option>
+                    </select>
+                    <select id="filterEstado" class="form-select" onchange="filtrarPorEstado()" style="width: auto;">
+                        <option value="">Todos los estados</option>
+                        <option value="ACTIVO">Activos</option>
+                        <option value="INACTIVO">Inactivos</option>
+                        <option value="VACACIONES">En vacaciones</option>
+                        <option value="LICENCIA">Con licencia</option>
+                    </select>
+                </div>
+
+                <!-- Tabla de empleados -->
+                <div class="table-container">
+                    <table class="table" id="tableEmpleados">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre Completo</th>
+                                <th>Email</th>
+                                <th>Departamento</th>
+                                <th>Cargo</th>
+                                <th>Salario</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para crear/editar empleado -->
+    <div id="modalEmpleado" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Nuevo Empleado</h3>
+                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formEmpleado" onsubmit="guardarEmpleado(event)">
+                    <input type="hidden" id="empleadoId">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nombre" class="form-label required">Nombre</label>
+                            <input type="text" id="nombre" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="apellido" class="form-label required">Apellido</label>
+                            <input type="text" id="apellido" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email" class="form-label required">Email</label>
+                            <input type="email" id="email" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="tel" id="telefono" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fechaNacimiento" class="form-label required">Fecha de Nacimiento</label>
+                            <input type="date" id="fechaNacimiento" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaContratacion" class="form-label">Fecha de Contratación</label>
+                            <input type="date" id="fechaContratacion" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="departamento" class="form-label required">Departamento</label>
+                            <select id="departamento" class="form-select" required>
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cargo" class="form-label required">Cargo</label>
+                            <select id="cargo" class="form-select" required onchange="actualizarRangoSalarial()">
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="salario" class="form-label required">Salario</label>
+                            <input type="number" id="salario" class="form-input" step="0.01" min="0" required>
+                            <small id="rangoSalarial" class="form-error" style="color: #64748b;"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="estado" class="form-label">Estado</label>
+                            <select id="estado" class="form-select">
+                                <option value="ACTIVO">Activo</option>
+                                <option value="INACTIVO">Inactivo</option>
+                                <option value="VACACIONES">Vacaciones</option>
+                                <option value="LICENCIA">Licencia</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" form="formEmpleado" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 Sistema de Recursos Humanos. Arquitectura en 3 capas.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module">
+        import * as EmpleadosService from '../capa-negocio/empleados-service.js';
+        import * as DepartamentosService from '../capa-negocio/departamentos-service.js';
+        import * as CargosService from '../capa-negocio/cargos-service.js';
+
+        // Variables globales
+        let empleadoActual = null;
+        let todosEmpleados = [];
+
+        // Exponer funciones al ámbito global
+        window.abrirModalNuevo = abrirModalNuevo;
+        window.cerrarModal = cerrarModal;
+        window.guardarEmpleado = guardarEmpleado;
+        window.editarEmpleado = editarEmpleado;
+        window.eliminarEmpleado = eliminarEmpleado;
+        window.buscarEmpleados = buscarEmpleados;
+        window.filtrarPorDepartamento = filtrarPorDepartamento;
+        window.filtrarPorEstado = filtrarPorEstado;
+        window.actualizarRangoSalarial = actualizarRangoSalarial;
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDatos();
+        });
+
+        async function cargarDatos() {
+            try {
+                // Cargar empleados
+                todosEmpleados = EmpleadosService.obtenerEmpleados();
+                renderizarTabla(todosEmpleados);
+
+                // Cargar departamentos en select
+                const departamentos = DepartamentosService.obtenerDepartamentosActivos();
+                cargarSelectDepartamentos(departamentos);
+
+                // Cargar cargos en select
+                const cargos = CargosService.obtenerCargosOrdenados();
+                cargarSelectCargos(cargos);
+            } catch (error) {
+                mostrarAlerta('Error al cargar los datos', 'danger');
+            }
+        }
+
+        function renderizarTabla(empleados) {
+            const tbody = document.querySelector('#tableEmpleados tbody');
+            if (empleados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay empleados registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = empleados.map(emp => `
+                <tr>
+                    <td>${emp.ID_EMPLEADO}</td>
+                    <td><strong>${emp.NOMBRE} ${emp.APELLIDO}</strong></td>
+                    <td>${emp.EMAIL}</td>
+                    <td>${emp.DEPARTAMENTO}</td>
+                    <td><span class="badge badge-secondary">${emp.CARGO}</span></td>
+                    <td>${emp.SALARIO_FORMATO}</td>
+                    <td>
+                        <span class="badge ${obtenerClaseBadge(emp.ESTADO)}">${emp.ESTADO}</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="editarEmpleado(${emp.ID_EMPLEADO})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="eliminarEmpleado(${emp.ID_EMPLEADO})">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function cargarSelectDepartamentos(departamentos) {
+            const select = document.getElementById('departamento');
+            const filter = document.getElementById('filterDepartamento');
+            
+            const options = departamentos.map(d => 
+                `<option value="${d.ID_DEPARTAMENTO}">${d.NOMBRE}</option>`
+            ).join('');
+            
+            select.innerHTML = '<option value="">Seleccionar...</option>' + options;
+            filter.innerHTML = '<option value="">Todos los departamentos</option>' + options;
+        }
+
+        function cargarSelectCargos(cargos) {
+            const select = document.getElementById('cargo');
+            const options = cargos.map(c => 
+                `<option value="${c.ID_CARGO}" data-min="${c.SALARIO_MINIMO}" data-max="${c.SALARIO_MAXIMO}">${c.NOMBRE} (${c.NIVEL})</option>`
+            ).join('');
+            
+            select.innerHTML = '<option value="">Seleccionar...</option>' + options;
+        }
+
+        function abrirModalNuevo() {
+            empleadoActual = null;
+            document.getElementById('modalTitle').textContent = 'Nuevo Empleado';
+            document.getElementById('formEmpleado').reset();
+            document.getElementById('empleadoId').value = '';
+            document.getElementById('modalEmpleado').classList.add('active');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalEmpleado').classList.remove('active');
+        }
+
+        function editarEmpleado(id) {
+            const empleado = todosEmpleados.find(e => e.ID_EMPLEADO === id);
+            if (!empleado) return;
+
+            empleadoActual = empleado;
+            document.getElementById('modalTitle').textContent = 'Editar Empleado';
+            document.getElementById('empleadoId').value = empleado.ID_EMPLEADO;
+            document.getElementById('nombre').value = empleado.NOMBRE;
+            document.getElementById('apellido').value = empleado.APELLIDO;
+            document.getElementById('email').value = empleado.EMAIL;
+            document.getElementById('telefono').value = empleado.TELEFONO || '';
+            document.getElementById('fechaNacimiento').value = formatearFechaInput(empleado.FECHA_NACIMIENTO);
+            document.getElementById('fechaContratacion').value = formatearFechaInput(empleado.FECHA_CONTRATACION);
+            document.getElementById('departamento').value = empleado.ID_DEPARTAMENTO;
+            document.getElementById('cargo').value = empleado.ID_CARGO;
+            document.getElementById('salario').value = empleado.SALARIO;
+            document.getElementById('estado').value = empleado.ESTADO;
+            
+            actualizarRangoSalarial();
+            document.getElementById('modalEmpleado').classList.add('active');
+        }
+
+        function guardarEmpleado(event) {
+            event.preventDefault();
+
+            const datos = {
+                NOMBRE: document.getElementById('nombre').value,
+                APELLIDO: document.getElementById('apellido').value,
+                EMAIL: document.getElementById('email').value,
+                TELEFONO: document.getElementById('telefono').value,
+                FECHA_NACIMIENTO: new Date(document.getElementById('fechaNacimiento').value),
+                FECHA_CONTRATACION: document.getElementById('fechaContratacion').value 
+                    ? new Date(document.getElementById('fechaContratacion').value)
+                    : new Date(),
+                ID_DEPARTAMENTO: parseInt(document.getElementById('departamento').value),
+                ID_CARGO: parseInt(document.getElementById('cargo').value),
+                SALARIO: parseFloat(document.getElementById('salario').value),
+                ESTADO: document.getElementById('estado').value
+            };
+
+            const id = document.getElementById('empleadoId').value;
+            let resultado;
+
+            if (id) {
+                // Actualizar
+                resultado = EmpleadosService.actualizarEmpleado(parseInt(id), datos);
+            } else {
+                // Crear
+                resultado = EmpleadosService.crearEmpleado(datos);
+            }
+
+            if (resultado.success) {
+                mostrarAlerta(resultado.message, 'success');
+                cerrarModal();
+                cargarDatos();
+            } else {
+                mostrarAlerta(resultado.message, 'danger');
+            }
+        }
+
+        function eliminarEmpleado(id) {
+            if (!confirm('¿Está seguro de que desea dar de baja a este empleado?')) {
+                return;
+            }
+
+            const resultado = EmpleadosService.eliminarEmpleado(id);
+            
+            if (resultado.success) {
+                mostrarAlerta(resultado.message, 'success');
+                cargarDatos();
+            } else {
+                mostrarAlerta(resultado.message, 'danger');
+            }
+        }
+
+        function buscarEmpleados() {
+            const texto = document.getElementById('searchInput').value;
+            const empleados = EmpleadosService.buscarEmpleados(texto);
+            renderizarTabla(empleados);
+        }
+
+        function filtrarPorDepartamento() {
+            const idDepartamento = document.getElementById('filterDepartamento').value;
+            if (!idDepartamento) {
+                renderizarTabla(todosEmpleados);
+                return;
+            }
+            const empleados = EmpleadosService.obtenerEmpleadosPorDepartamento(parseInt(idDepartamento));
+            renderizarTabla(empleados);
+        }
+
+        function filtrarPorEstado() {
+            const estado = document.getElementById('filterEstado').value;
+            if (!estado) {
+                renderizarTabla(todosEmpleados);
+                return;
+            }
+            const empleados = todosEmpleados.filter(e => e.ESTADO === estado);
+            renderizarTabla(empleados);
+        }
+
+        function actualizarRangoSalarial() {
+            const cargoSelect = document.getElementById('cargo');
+            const option = cargoSelect.options[cargoSelect.selectedIndex];
+            if (!option || !option.dataset.min) return;
+
+            const min = parseFloat(option.dataset.min);
+            const max = parseFloat(option.dataset.max);
+            const rangoElement = document.getElementById('rangoSalarial');
+            rangoElement.textContent = `Rango permitido: $${min.toFixed(2)} - $${max.toFixed(2)}`;
+        }
+
+        function mostrarAlerta(mensaje, tipo) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        function obtenerClaseBadge(estado) {
+            const clases = {
+                'ACTIVO': 'badge-success',
+                'INACTIVO': 'badge-danger',
+                'VACACIONES': 'badge-warning',
+                'LICENCIA': 'badge-info'
+            };
+            return clases[estado] || 'badge-secondary';
+        }
+
+        function formatearFechaInput(fecha) {
+            if (!fecha) return '';
+            const d = new Date(fecha);
+            const año = d.getFullYear();
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const dia = String(d.getDate()).padStart(2, '0');
+            return `${año}-${mes}-${dia}`;
+        }
+    </script>
+</body>
+</html>
